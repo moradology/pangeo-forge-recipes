@@ -267,8 +267,13 @@ class OpenWithXarray(beam.PTransform):
     xarray_open_kwargs: Optional[dict] = field(default_factory=dict)
 
     def expand(self, pcoll):
+        def apply_function_with_side_inputs(element, file_type, load, copy_to_local, xarray_open_kwargs):
+            key, value = element
+            result = open_with_xarray(value, file_type=file_type, load=load, copy_to_local=copy_to_local, xarray_open_kwargs=xarray_open_kwargs)
+            return key, result
+
         return pcoll | "Open with Xarray" >> beam.Map(
-            _add_keys(open_with_xarray),
+            apply_function_with_side_inputs,
             file_type=self.file_type,
             load=self.load,
             copy_to_local=self.copy_to_local,
